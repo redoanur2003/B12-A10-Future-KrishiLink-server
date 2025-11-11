@@ -6,6 +6,10 @@ const app = express();
 const port = process.env.PORT || 1212;
 // console.log(process.env);
 
+// middleware
+app.use(cors());
+app.use(express.json())
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.8l6zy8s.mongodb.net/?appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -23,6 +27,25 @@ app.get('/', (req, res) => {
 async function run() {
     try {
         await client.connect();
+
+        const db = client.db('krishilink_db');
+        const allCropsCollection = db.collection('allCrops');
+
+        //add crops
+        app.post('/crop', async (req, res) => {
+            const newCrops = req.body;
+            const result = await allCropsCollection.insertOne(newCrops);
+            console.log('New crops add', newCrops);
+            res.send(result);
+        })
+
+        app.get('/crop', async (req, res) => {
+            const cursor = allCropsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        });
+
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     }
@@ -34,6 +57,3 @@ run().catch(console.dir);
 app.listen(port, () => {
     console.log(`KrishiLink server is running on port: ${port}`)
 });
-
-//iIlKZzSOS0OF856E
-//krishilinkdb
