@@ -30,6 +30,7 @@ async function run() {
 
         const db = client.db('krishilink_db');
         const allCropsCollection = db.collection('allCrops');
+        const newsCollection = db.collection('news&blog');
 
         //add crops
         app.post('/crop', async (req, res) => {
@@ -37,10 +38,28 @@ async function run() {
             const result = await allCropsCollection.insertOne(newCrops);
             console.log('New crops add', newCrops);
             res.send(result);
-        })
+        });
+        app.post('/news', async (req, res) => {
+            const news = req.body;
+            const result = await newsCollection.insertOne(news);
+            console.log('New crops add', news);
+            res.send(result);
+        });
+        app.get('/news', async (req, res) => {
+            const cursor = newsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        });
 
         app.get('/crop', async (req, res) => {
             const cursor = allCropsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        });
+
+        //latest
+        app.get('/crop/latest', async (req, res) => {
+            const cursor = allCropsCollection.find().sort({ cropsAddedTime: -1 }).limit(6);
             const result = await cursor.toArray();
             res.send(result)
         });
