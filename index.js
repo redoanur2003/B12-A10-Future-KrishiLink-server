@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 1212;
 // console.log(process.env);
@@ -39,6 +39,36 @@ async function run() {
             console.log('New crops add', newCrops);
             res.send(result);
         });
+
+        app.get('/crop', async (req, res) => {
+            const cursor = allCropsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        });
+
+
+        //Single crops
+        app.get('/crop/:id', async (req, res) => {
+            const id = req.params.id;
+            // console.log("Id is: ", id)
+            let result;
+            result = await allCropsCollection.findOne({ _id: new ObjectId(id) });
+
+            if (!result) {
+                result = await allCropsCollection.findOne({ _id: id });
+            }
+            // console.log(result);
+            res.send(result);
+        })
+
+        //latest
+        app.get('/latest', async (req, res) => {
+            const cursor = allCropsCollection.find().sort({ cropsAddedTime: -1 }).limit(6);
+            const result = await cursor.toArray();
+            res.send(result)
+        });
+
+        //news
         app.post('/news', async (req, res) => {
             const news = req.body;
             const result = await newsCollection.insertOne(news);
@@ -47,19 +77,6 @@ async function run() {
         });
         app.get('/news', async (req, res) => {
             const cursor = newsCollection.find();
-            const result = await cursor.toArray();
-            res.send(result)
-        });
-
-        app.get('/crop', async (req, res) => {
-            const cursor = allCropsCollection.find();
-            const result = await cursor.toArray();
-            res.send(result)
-        });
-
-        //latest
-        app.get('/crop/latest', async (req, res) => {
-            const cursor = allCropsCollection.find().sort({ cropsAddedTime: -1 }).limit(6);
             const result = await cursor.toArray();
             res.send(result)
         });
