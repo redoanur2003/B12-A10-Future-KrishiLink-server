@@ -61,6 +61,19 @@ async function run() {
             res.send(result);
         })
 
+        //my post api
+        app.get('/myPost', async (req, res) => {
+            const email = req.query.email;
+            console.log('email is: ', email);
+            if (!email) {
+                return res.status(400).send({ error: 'Email query parameter required' });
+            }
+            const query = { "owner.ownerEmail": email };
+            const result = await allCropsCollection.find(query).toArray();
+            console.log(result);
+            res.send(result);
+        });
+
         //latest
         app.get('/latest', async (req, res) => {
             const cursor = allCropsCollection.find().sort({ cropsAddedTime: -1 }).limit(6);
