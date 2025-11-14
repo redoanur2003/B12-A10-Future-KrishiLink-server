@@ -36,7 +36,7 @@ async function run() {
         app.post('/crop', async (req, res) => {
             const newCrops = req.body;
             const result = await allCropsCollection.insertOne(newCrops);
-            console.log('New crops add', newCrops);
+            // console.log('New crops add', newCrops);
             res.send(result);
         });
 
@@ -79,7 +79,7 @@ async function run() {
 
             }
 
-            console.log("result is: ", result)
+            // console.log("result is: ", result)
             res.send(result)
         })
 
@@ -94,9 +94,41 @@ async function run() {
             if (!result) {
                 result = await allCropsCollection.findOne({ _id: id });
             }
-            console.log(result);
+            // console.log(result);
             res.send(result);
         })
+
+        //add interest
+
+        app.patch('/crop/interest/:id', async (req, res) => {
+            const id = req.params.id;
+            const interestData = req.body;
+            const interestId = new ObjectId();
+
+            // console.log("Id is: ", id)
+            // console.log("interstid is: ", interestId)
+            // console.log("intertst is: ", interestData)
+
+            const newInterest = { _id: interestId, interestData };
+
+            const update = {
+                $push: {
+                    interests: newInterest
+                }
+            };
+
+            let result;
+            if (ObjectId.isValid(id)) {
+                result = await allCropsCollection.updateOne({ _id: new ObjectId(id) }, update);
+                if (result.matchedCount === 0) {
+                    result = await allCropsCollection.updateOne({ _id: id }, update);
+                }
+            } else {
+                result = await allCropsCollection.updateOne({ _id: id }, update);
+
+            }
+            res.send(result);
+        });
 
         //crop delete 
         app.delete('/crop/:id', async (req, res) => {
@@ -112,14 +144,14 @@ async function run() {
 
             }
 
-            console.log("result is: ", result)
+            // console.log("result is: ", result)
             res.send(result)
         })
 
         //my post api
         app.get('/myPost', async (req, res) => {
             const email = req.query.email;
-            console.log('email is: ', email);
+            // console.log('email is: ', email);
             if (!email) {
                 return res.status(400).send({ error: 'Email query parameter required' });
             }
@@ -140,7 +172,7 @@ async function run() {
         app.post('/news', async (req, res) => {
             const news = req.body;
             const result = await newsCollection.insertOne(news);
-            console.log('New crops add', news);
+            // console.log('New crops add', news);
             res.send(result);
         });
         app.get('/news', async (req, res) => {
@@ -150,7 +182,7 @@ async function run() {
         });
 
 
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     }
     finally {
