@@ -46,6 +46,43 @@ async function run() {
             res.send(result)
         });
 
+        //update
+        app.patch('/crop/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedCrop = req.body;
+
+            // console.log("Incoming ID:", id);
+            // console.log("ObjectId.isValid:", ObjectId.isValid(id));
+            // console.log("UpdatedCrop:", updatedCrop);
+
+            const update = {
+                $set: {
+                    name: updatedCrop.cropName,
+                    type: updatedCrop.cropType,
+                    pricePerUnit: updatedCrop.price,
+                    unit: updatedCrop.unit,
+                    quantity: updatedCrop.quantitys,
+                    location: updatedCrop.locations,
+                    description: updatedCrop.descriptions,
+                    image: updatedCrop.images
+                }
+            }
+
+            let result;
+            if (ObjectId.isValid(id)) {
+                result = await allCropsCollection.updateOne({ _id: new ObjectId(id) }, update);
+                if (result.matchedCount === 0) {
+                    result = await allCropsCollection.updateOne({ _id: id }, update);
+                }
+            } else {
+                result = await allCropsCollection.updateOne({ _id: id }, update);
+
+            }
+
+            console.log("result is: ", result)
+            res.send(result)
+        })
+
 
         //Single crops
         app.get('/crop/:id', async (req, res) => {
@@ -57,8 +94,26 @@ async function run() {
             if (!result) {
                 result = await allCropsCollection.findOne({ _id: id });
             }
-            // console.log(result);
+            console.log(result);
             res.send(result);
+        })
+
+        //crop delete 
+        app.delete('/crop/:id', async (req, res) => {
+            const id = req.params.id;
+            let result;
+            if (ObjectId.isValid(id)) {
+                result = await allCropsCollection.deleteOne({ _id: new ObjectId(id) });
+                if (result.deletedCount === 0) {
+                    result = await allCropsCollection.deleteOne({ _id: id });
+                }
+            } else {
+                result = await allCropsCollection.deleteOne({ _id: id });
+
+            }
+
+            console.log("result is: ", result)
+            res.send(result)
         })
 
         //my post api
@@ -70,7 +125,7 @@ async function run() {
             }
             const query = { "owner.ownerEmail": email };
             const result = await allCropsCollection.find(query).toArray();
-            console.log(result);
+            // console.log(result);
             res.send(result);
         });
 
