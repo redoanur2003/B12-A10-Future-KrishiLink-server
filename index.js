@@ -181,6 +181,57 @@ async function run() {
             res.send(result)
         });
 
+        //status update 
+        app.patch('/updateInterest', async (req, res) => {
+
+            const { interestId, cropsId, status } = req.body;
+
+            console.log(`interestId: ${interestId} crop: ${cropsId} state: ${status}`);
+
+            if (!interestId || !cropsId || !status) {
+                return res.status(400).json({ message: "Missing required fields" });
+            }
+
+            let crop = null;
+            if (ObjectId.isValid(cropsId)) {
+                crop = await allCropsCollection.findOne({ _id: new ObjectId(cropsId) });
+                if (!crop) {
+                    crop = await allCropsCollection.findOne({ _id: cropsId });
+                }
+            } else {
+                crop = await allCropsCollection.findOne({ _id: cropsId });
+            }
+
+            if (!crop) return res.status(404).json({ message: "Crop not found" });
+
+            const interestIndex = crop.interests.findIndex(i => i._id.toString() === interestId);
+            if (interestIndex === -1) return res.status(404).json({ message: "Interest not found" });
+
+            crop.interests[interestIndex].interestData.status = status;
+
+            if (status === 'accept') {
+                const requestedQty = Number(crop.interests[interestIndex].interestData.quantity);
+                crop.quantity = Number(crop.quantity) - requestedQty;
+            }
+
+            const update = { $set: { interests: crop.interests, quantity: crop.quantity } };
+            console.log("Update data is: ", update);
+
+            let result;
+            if (ObjectId.isValid(cropsId)) {
+                result = await allCropsCollection.updateOne({ _id: new ObjectId(cropsId) }, update);
+                if (result.matchedCount === 0) {
+                    result = await allCropsCollection.updateOne({ _id: cropsId }, update);
+                }
+            } else {
+                result = await allCropsCollection.updateOne({ _id: cropsId }, update);
+            }
+
+            console.log("result is: ", result);
+
+            res.send(result);
+        });
+
 
         // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
